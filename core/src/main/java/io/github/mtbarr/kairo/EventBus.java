@@ -110,7 +110,7 @@ public class EventBus {
   private void sortAdd(SubscriberMethod method) {
     List<SubscriberMethod> subscriberMethods = this.getSubscribersForType(method.eventClass());
     int index = 0;
-    while (index < subscriberMethods.size() && subscriberMethods.get(index).priority() >= method.priority()) {
+    while (index < subscriberMethods.size() && subscriberMethods.get(index).priority() <= method.priority()) {
       index++;
     }
 
