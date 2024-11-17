@@ -167,7 +167,6 @@ public class EventBus {
    * Wraps all methods of a subscriber object that are annotated with {@link Subscribe}.
    *
    * @param subscriber the object containing methods annotated with {@link Subscribe}.
-   * @return a list of reflective subscriber methods extracted from the subscriber object.
    */
   private void registerSubscriberMethods(Object subscriber) {
     Method[] methods = subscriber.getClass().getDeclaredMethods();
