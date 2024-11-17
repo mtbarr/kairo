@@ -89,10 +89,16 @@ Register a subscriber that can cancel the event:
 
 ```java
 public class CancellableSubscriber {
-    @Subscribe
+    @Subscribe(priority = 1)
     public void onMyCancellableEvent(MyCancellableEvent event) {
         System.out.println("Event received. Cancelling...");
         event.setCancelled(true);
+    }
+    
+    @Subscriber(priority = 0, ignoreCancelled = true)
+    public void onMyCancellableEventIgnored(MyCancellableEvent event) {
+      // will not be be called cuz the event above cancelled the event
+      // and has ignoreCancelled set to true
     }
 }
 
