@@ -2,6 +2,7 @@ package io.github.mtbarr.kairo;
 
 import io.github.mtbarr.kairo.annotation.Subscribe;
 import io.github.mtbarr.kairo.cancellable.CancellableEvent;
+import io.github.mtbarr.kairo.exception.EventExceptionHandler;
 import io.github.mtbarr.kairo.exception.SubscriberRegistrationException;
 import io.github.mtbarr.kairo.subscriber.FunctionalSubscriberMethod;
 import io.github.mtbarr.kairo.subscriber.ReflectiveSubscriberMethod;
@@ -23,9 +24,22 @@ import java.util.function.Consumer;
 public class EventBus {
 
   /**
+   * The default exception handler that will be called when an exception occurs while invoking a subscriber method.
+   */
+  static final EventExceptionHandler DEFAULT_EXCEPTION_HANDLER = (method, event, throwable) -> {
+    throw new RuntimeException("Error invoking subscriber method " + method + " for event " + event, throwable);
+  };
+
+  /**
    * A map of event types to lists of subscriber methods that should be called when an event of that type is posted.
    */
   private final Map<Class<?>, List<SubscriberMethod>> subscribersMap;
+
+
+  /**
+   * The exception handler that will be called when an exception occurs while invoking a subscriber method.
+   */
+  private EventExceptionHandler exceptionHandler = DEFAULT_EXCEPTION_HANDLER;
 
   /**
    * Constructs an EventBus with an empty subscriber map.
@@ -34,6 +48,23 @@ public class EventBus {
     this.subscribersMap = new ConcurrentHashMap<>();
   }
 
+  /**
+   * Sets the exception handler that will be called when an exception occurs while invoking a subscriber method.
+   *
+   * @param exceptionHandler the exception handler that will be called when an exception occurs while invoking a subscriber method.
+   */
+  public void setExceptionHandler(EventExceptionHandler exceptionHandler) {
+    this.exceptionHandler = exceptionHandler;
+  }
+
+  /**
+   * Returns the exception handler that will be called when an exception occurs while invoking a subscriber method.
+   *
+   * @return the exception handler that will be called when an exception occurs while invoking a subscriber method.
+   */
+  public EventExceptionHandler getExceptionHandler() {
+    return exceptionHandler;
+  }
 
   /**
    * Subscribes a functional listener for a particular type of event.
@@ -145,7 +176,11 @@ public class EventBus {
         continue;
       }
 
-      subscriberMethod.invoke(event);
+      try {
+        subscriberMethod.invoke(event);
+      } catch (Exception e) {
+        exceptionHandler.handleEventException(subscriberMethod, event, e);
+      }
 
       if (canBeCancelled) {
         cancelled = ((CancellableEvent) event).isCancelled();
@@ -201,5 +236,4 @@ public class EventBus {
       throw new IllegalArgumentException("Failed to create subscriber method.", throwable);
     }
   }
-
 }
